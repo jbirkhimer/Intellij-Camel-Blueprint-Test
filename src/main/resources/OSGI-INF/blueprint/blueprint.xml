@@ -9,7 +9,7 @@
         <property name="say" value="Hi from Camel"/>
     </bean>-->
 
-    <camelContext xmlns="http://camel.apache.org/schema/blueprint">
+    <camelContext trace="false" streamCache="true" xmlns="http://camel.apache.org/schema/blueprint">
         <route id="TestVideoRouts">
             <!--
             <from uri="timer:foo?period=5000"/>
@@ -20,7 +20,7 @@
             <to uri="file:camel/output"/>
             -->
 
-            <from uri="file:camel/input?moveFailed=/error"/>
+            <from uri="file:camel/input"/>
             <setHeader headerName="CamelFedoraPid">
                 <simple>si:00000000</simple>
             </setHeader>
@@ -52,7 +52,7 @@
                 <simple>video/${file:ext}</simple>  <!-- testing -->
             </setHeader>
             <log message="${id} Derivatives: Datastream Metadata. MIME: ${header.dsMIME}"
-                 loggingLevel="DEBUG"
+                 loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
 
             <!-- Get the Video from the FDO. -->
@@ -66,11 +66,12 @@
                         ${header.dsMIME} == 'video/mp4'
                     </simple>
                     <!-- Just copy it and create thumbnail. -->
-                    <multicast>
+                    <multicast stopOnException="true">
                         <!--<to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>-->
+                        <to uri="direct:processDerivativesVideoLength"/>
                         <to uri="file:camel/output/mp4"/>   <!-- testing -->
-                        <to uri="direct:processDerivativesVideoThumbnail"/>
                     </multicast>
+                    <to uri="direct:processDerivativesVideoThumbnail"/>
                     <log message="${id} Derivatives: No processing required copying mp4 directly to MP4."
                          loggingLevel="DEBUG"
                          logName="edu.si.derivatives"/>
@@ -86,8 +87,9 @@
                     </simple>
                     <!-- Make an MP4 derivative and TN. -->
                     <!-- Create a video derivative and thumbnail using ffmpeg. -->
-                    <multicast>
+                    <multicast stopOnException="true" strategyRef="UseLatestAggregationStrategy">
                         <to uri="direct:processDerivativesVideoFFMPEG"/>
+                        <to uri="direct:processDerivativesVideoLength"/>
                         <to uri="direct:processDerivativesVideoThumbnail"/>
                     </multicast>
                 </when>
@@ -138,48 +140,78 @@
                  logName="edu.si.derivatives"/>
         </route>
 
+        <route id="DerivativesProcessVideoLength">
+            <from uri="direct:processDerivativesVideoLength"/>
+            <log message="${id} Derivatives: Started Video Length processing ..."
+                 loggingLevel="DEBUG"
+                 logName="edu.si.derivatives"/>
+            <recipientList>
+                    <simple>exec:ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of default=noprint_wrappers=1:nokey=1 -</simple>
+            </recipientList>
+
+            <!-- Make an TN derivative. -->
+            <!-- Create a video thumbnail using ffprobe and ffmpeg. -->
+
+            <choice>
+                <!-- If ffprobe processing succeeded? Store video length in header. -->
+                <when>
+                    <simple>
+                        ${headers.CamelExecExitValue} == 0
+                    </simple>
+                    <setHeader headerName="videoLength">
+                        <simple>${bodyAs(String)}</simple>
+                    </setHeader>
+                    <log message="${id} Derivatives: Adding Video length ${header.videoLength} to header."
+                         loggingLevel="INFO"
+                         logName="edu.si.derivatives"/>
+                </when>
+                <otherwise>
+                    <log message="${id} Derivatives: Video Length processing failed. PID: ${headers.CamelFedoraPid}  Error Code: ${headers.CamelExecExitValue}"
+                         loggingLevel="ERROR"/>
+                </otherwise>
+            </choice>
+            <log message="${id} Finished Derivatives Video length processing."
+                 loggingLevel="DEBUG"
+                 logName="edu.si.derivatives"/>
+        </route>
+
         <route id="DerivativesProcessVideoThumbnail">
             <from uri="direct:processDerivativesVideoThumbnail"/>
             <log message="${id} Derivatives: Started Video Thumbnail processing ..."
                  loggingLevel="DEBUG"
                  logName="edu.si.derivatives"/>
 
+            <log message="================================== VIDEO LENGTH ${header.videoLength} ============================================"
+                 loggingLevel="INFO"
+                 logName="edu.si.derivatives"/>
+
+            <!-- Make an TN datastream. -->
+            <!-- Create a video thumbnail using ffmpeg. -->
             <recipientList>
                 <simple>
-                    exec:ffprobe?args -v error -select_streams v:0 -show_entries stream=duration -of default=noprint_wrappers=1:nokey=1 -
-                </simple>
-            </recipientList>
-            <log message="${id} Derivitives: FFPROBE result = ${headers.CamelExecStderr}"/>
-
-
-            <!-- Make an TN derivative. -->
-            <!-- Create a video thumbnail using ffprobe and ffmpeg. -->
-            <recipientList>
-                <simple>
-                    exec:ffmpeg?args= -i - -f mp4 -vcodec libx264 -preset medium -acodec libfdk_aac -ab 128k -ac
-                    2 -async 1 -
+                    exec:ffmpeg?args=-itsoffset -2 -ss ${headers.videoLength} -i - -vcodec mjpeg -vframes 1 -an -f rawvideo -;
                 </simple>
             </recipientList>
             <choice>
-                <!-- If ffmpeg processing succeeded? Store a TN datastream on the FDO. -->
+                <!-- If ffmpeg processing succeeded? Store a MP4 datastream on the FDO. -->
                 <when>
                     <simple>
                         ${headers.CamelExecExitValue} == 0
                     </simple>
                     <multicast>
-                        <!--<to uri="fedora:addDatastream?name=TN&amp;type=image/jpg&amp;dsLabel=TN&amp;group=M&amp;versionable=false"/>-->
-                        <to uri="file:camel/output/?fileName=${file:ext}"/>   <!-- testing -->
+                        <!--<to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>-->
+                        <to uri="file:camel/output/?fileName=${file:onlyname.noext}.jpg"/>   <!-- testing -->
                     </multicast>
-                    <log message="${id} Derivatives: Adding video thumbnail as jpeg to TN."
+                    <log message="${id} Derivatives: Adding video thumbnail to TN."
                          loggingLevel="DEBUG"
                          logName="edu.si.derivatives"/>
                 </when>
                 <otherwise>
-                    <log message="${id} Derivatives: Video Thumbnail processing failed. PID: ${headers.CamelFedoraPid}  Error Code: ${headers.CamelExecExitValue}"
+                    <log message="${id} Derivatives: FFMPEG video thumbnail processing failed. PID: ${headers.CamelFedoraPid}  Error Code: ${headers.CamelExecExitValue}"
                          loggingLevel="ERROR"/>
                 </otherwise>
             </choice>
-            <log message="${id} Finished Derivatives Video FFMPEG processing."
+            <log message="${id} Finished Derivatives Video FFMPEG thumbnail processing."
                  loggingLevel="DEBUG"
                  logName="edu.si.derivatives"/>
         </route>
