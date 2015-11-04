@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$USER_HOME$/git/sidora-services/Components/FedoraRepo/FedoraRepo.iml" filepath="$USER_HOME$/git/sidora-services/Components/FedoraRepo/FedoraRepo.iml" />
       <module fileurl="file://$PROJECT_DIR$/Intellij-Camel-Blueprint-Test.iml" filepath="$PROJECT_DIR$/Intellij-Camel-Blueprint-Test.iml" />
     </modules>
   </component>

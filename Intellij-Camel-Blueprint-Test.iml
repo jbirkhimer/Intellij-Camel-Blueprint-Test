@@ -2,7 +2,7 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Osmorc" name="OSGi">
-      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="camel-test-rout-1.0-SNAPSHOT.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="" bundleSymbolicName="camel-test-rout" bundleVersion="1.0.0.SNAPSHOT" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
+      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="camel-test-route-1.0-SNAPSHOT.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="" bundleSymbolicName="camel-test-rout" bundleVersion="1.0.0.SNAPSHOT" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Private-Package" value="edu.si.services.*" />
           <property key="Import-Package" value="*" />
@@ -39,6 +39,24 @@
     <orderEntry type="library" name="Maven: org.apache.camel:camel-blueprint:2.14.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.camel:camel-core-xml:2.14.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.camel:camel-core-osgi:2.14.3" level="project" />
+    <orderEntry type="module" module-name="FedoraRepo" />
+    <orderEntry type="library" name="Maven: com.yourmediashelf.fedora.client:fedora-client-core:0.7" level="project" />
+    <orderEntry type="library" name="Maven: com.sun.jersey:jersey-client:1.17.1" level="project" />
+    <orderEntry type="library" name="Maven: com.sun.jersey:jersey-core:1.17.1" level="project" />
+    <orderEntry type="library" name="Maven: com.sun.jersey.contribs:jersey-multipart:1.17.1" level="project" />
+    <orderEntry type="library" name="Maven: org.jvnet:mimepull:1.6" level="project" />
+    <orderEntry type="library" name="Maven: eu.medsea.mimeutil:mime-util:2.1.3" level="project" />
+    <orderEntry type="library" name="Maven: joda-time:joda-time:2.2" level="project" />
+    <orderEntry type="library" name="Maven: com.hp.hpl.jena:jena:2.6.4" level="project" />
+    <orderEntry type="library" name="Maven: com.hp.hpl.jena:iri:0.8" level="project" />
+    <orderEntry type="library" name="Maven: com.ibm.icu:icu4j:3.4.4" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.santuario:xmlsec:1.5.4" level="project" />
+    <orderEntry type="library" name="Maven: org.codehaus.jackson:jackson-mapper-lgpl:1.9.11" level="project" />
+    <orderEntry type="library" name="Maven: org.codehaus.jackson:jackson-core-lgpl:1.9.11" level="project" />
+    <orderEntry type="library" name="Maven: xerces:xercesImpl:2.11.0" level="project" />
+    <orderEntry type="library" name="Maven: xml-apis:xml-apis:1.4.01" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: com.sun.jersey:jersey-bundle:1.17.1" level="project" />
+    <orderEntry type="library" scope="RUNTIME" name="Maven: javax.ws.rs:jsr311-api:1.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-log4j12:1.7.12" level="project" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
