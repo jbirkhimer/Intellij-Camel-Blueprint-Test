@@ -9,8 +9,8 @@
         <property name="say" value="Hi from Camel"/>
     </bean>-->
 
-    <!-- the on prepare Processor which performs the deep cloning -->
-    <!--<bean id="videoProcessingPrepare" class="edu.si.services.VideoProcessingPrepare"/>-->
+    <!-- The VideoThumbnailAggregationStrategy -->
+    <bean id="videoThumbnailAggregationStrategy" class="edu.si.services.beans.VideoThumbnailAggregationStrategy"/>
 
     <camelContext id="VideoDerivativeCamelTesting"
                   xmlns="http://camel.apache.org/schema/blueprint"
@@ -32,9 +32,11 @@
             <log message="The message contains ${body}"/>
             <to uri="file:camel/output"/>
             -->
-
             <!--<from uri="file:camel/input"/>-->
-            <from uri="timer:fire?period=30000"/>
+            <from uri="file:camel/input?noop=true"/>
+            <!--<from uri="stream:file?fileName=camel/input/test.mp4&amp;autoCloseCount=1"/>-->
+
+            <!--<from uri="timer:fire?period=30000"/>-->
 
             <log message="Starting ???"/>
 
@@ -53,7 +55,7 @@
             </setHeader>
 
             <setHeader headerName="fileEXT">
-                <simple>video/${file:ext}</simple>
+                <simple>video/mp4</simple>
             </setHeader>
 
             <log message="${id} File ext: ${header.fileEXT}"/>
@@ -72,16 +74,16 @@
 
             <!-- Get the MIME type from the datastream profile. -->
             <!-- We should try the getDatastream more than once if it fails. -->
-            <to uri="fedora://getDatastream?dsId=OBJ&amp;exchangePattern=InOut"/>
+            <!--<to uri="fedora://getDatastream?dsId=OBJ&amp;exchangePattern=InOut"/>
             <log message="${id} Derivatives: Datastream Metadata. BODY: ${body}"
                  loggingLevel="DEBUG"
-                 logName="edu.si.derivatives"/>
+                 logName="edu.si.derivatives"/>-->
 
             <setHeader headerName="dsMIME">
-                <xpath resultType="java.lang.String">
+                <!--<xpath resultType="java.lang.String">
                     /fsmgmt:datastreamProfile/fsmgmt:dsMIME/text()
-                </xpath>
-                <!--<simple>video/${file:ext}</simple>-->  <!-- testing -->
+                </xpath>-->
+                <simple>video/mp4</simple>  <!-- testing -->
             </setHeader>
 
             <log message="${id} Derivatives: Datastream Metadata. MIME: ${header.dsMIME}"
@@ -90,7 +92,7 @@
 
             <!-- Get the Video from the FDO. -->
             <!-- We should try the getDatastreamDissemination more than once if it fails. -->
-            <to uri="fedora://getDatastreamDissemination?dsId=OBJ&amp;exchangePattern=InOut"/>
+            <!--<to uri="fedora://getDatastreamDissemination?dsId=OBJ&amp;exchangePattern=InOut"/>-->
 
             <log message="Got The Video from Fedora......."
                  loggingLevel="INFO"
@@ -106,7 +108,7 @@
                     </simple>
 
                     <!-- Just copy it and create thumbnail. -->
-                    <multicast stopOnException="true" >
+                    <multicast stopOnException="true" strategyRef="videoThumbnailAggregationStrategy">
                         <!--<to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>-->
                         <to uri="direct:processDerivativesVideoLength"/>
                         <to uri="file:camel/output/mp4?fileName=${header.CamelFedoraPid}.mp4"/>   <!-- testing -->
@@ -198,8 +200,17 @@
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
             <recipientList>
-                    <simple>exec:ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of default=noprint_wrappers=1:nokey=1 -</simple>
+                    <simple trim="true">exec:ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of default=noprint_wrappers=1:nokey=1 -</simple>
             </recipientList>
+
+            <log message="FFPROBE========= ${body}"/>
+
+            <recipientList>
+                <simple>exec:bc?args=${body}/2</simple>
+            </recipientList>
+
+            <log message="BC=============== ${body}"/>
+
 
             <!-- Make an TN derivative. -->
             <!-- Create a video thumbnail using ffprobe and ffmpeg. -->
@@ -210,9 +221,11 @@
                     <simple>
                         ${headers.CamelExecExitValue} == 0
                     </simple>
+
                     <setHeader headerName="videoLength">
                         <simple>${bodyAs(String)}</simple>
                     </setHeader>
+
                     <log message="${id} Derivatives: Adding Video length ${header.videoLength} to header."
                          loggingLevel="INFO"
                          logName="edu.si.derivatives"/>
