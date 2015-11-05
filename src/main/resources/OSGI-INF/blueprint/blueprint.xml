@@ -213,17 +213,19 @@
 
 
 
-            <multicast>
+            <!--<multicast>
                 <to uri="file:camel/output/?fileName=text.txt"/>
-            </multicast>
+            </multicast>-->
 
 
 
             <log message="FFPROBE========= ${body}"/>
 
-            <!--<recipientList>
-                <simple>exec:bc?args=${body}/2</simple>
-            </recipientList>-->
+            <recipientList>
+                <simple>exec:eval?args="echo ${body}/2 | bc"</simple>
+            </recipientList>
+
+            <convertBodyTo type="String" charset="UTF-8"/>
 
             <log message="BC=============== ${body}"/>
 
@@ -263,7 +265,7 @@
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
 
-            <log message="================================== VIDEO LENGTH ${headers.videoLength} ============================================"
+            <log message="================================== VIDEO LENGTH ${header.videoLength} ============================================"
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
 
@@ -271,7 +273,7 @@
             <!-- Create a video thumbnail using ffmpeg. -->
             <recipientList>
                 <simple>
-                    exec:ffmpeg?args=-itsoffset -2 -ss ${headers.videoLength} -i - -vcodec mjpeg -vframes 1 -an -f rawvideo -;
+                    exec:ffmpeg?args=-itsoffset -2 -ss ${headers.videoLength} -i - -vcodec mjpeg -vframes 1 -an -f rawvideo -
                 </simple>
             </recipientList>
             <choice>
