@@ -33,10 +33,10 @@
             <to uri="file:camel/output"/>
             -->
             <!--<from uri="file:camel/input"/>-->
-            <from uri="file:camel/input?noop=true"/>
+            <!--<from uri="file:camel/input?noop=true"/>-->
             <!--<from uri="stream:file?fileName=camel/input/test.mp4&amp;autoCloseCount=1"/>-->
 
-            <!--<from uri="timer:fire?period=30000"/>-->
+            <from uri="timer:fire?period=30000"/>
 
             <log message="Starting ???"/>
 
@@ -55,7 +55,7 @@
             </setHeader>
 
             <setHeader headerName="fileEXT">
-                <simple>video/mp4</simple>
+                <simple>video/${file:ext}</simple>
             </setHeader>
 
             <log message="${id} File ext: ${header.fileEXT}"/>
@@ -74,16 +74,16 @@
 
             <!-- Get the MIME type from the datastream profile. -->
             <!-- We should try the getDatastream more than once if it fails. -->
-            <!--<to uri="fedora://getDatastream?dsId=OBJ&amp;exchangePattern=InOut"/>
+            <to uri="fedora://getDatastream?dsId=OBJ&amp;exchangePattern=InOut"/>
             <log message="${id} Derivatives: Datastream Metadata. BODY: ${body}"
-                 loggingLevel="DEBUG"
-                 logName="edu.si.derivatives"/>-->
+                 loggingLevel="INFO"
+                 logName="edu.si.derivatives"/>
 
             <setHeader headerName="dsMIME">
-                <!--<xpath resultType="java.lang.String">
+                <xpath resultType="java.lang.String">
                     /fsmgmt:datastreamProfile/fsmgmt:dsMIME/text()
-                </xpath>-->
-                <simple>video/mp4</simple>  <!-- testing -->
+                </xpath>
+                <!--<simple>video/${file:ext}</simple>-->  <!-- testing -->
             </setHeader>
 
             <log message="${id} Derivatives: Datastream Metadata. MIME: ${header.dsMIME}"
@@ -92,7 +92,7 @@
 
             <!-- Get the Video from the FDO. -->
             <!-- We should try the getDatastreamDissemination more than once if it fails. -->
-            <!--<to uri="fedora://getDatastreamDissemination?dsId=OBJ&amp;exchangePattern=InOut"/>-->
+            <to uri="fedora://getDatastreamDissemination?dsId=OBJ&amp;exchangePattern=InOut"/>
 
             <log message="Got The Video from Fedora......."
                  loggingLevel="INFO"
@@ -199,15 +199,31 @@
             <log message="${id} Derivatives: Started Video Length processing ..."
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
+
             <recipientList>
-                    <simple trim="true">exec:ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of default=noprint_wrappers=1:nokey=1 -</simple>
+                    <simple>exec:ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of compact=print_section=0:nokey=1 -</simple>
             </recipientList>
+            <!--<to uri="exec:ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of compact=print_section=0:nokey=1 - "/>-->
+
+            <convertBodyTo type="String" charset="UTF-8"/>
+
+            <transform>
+                <simple>${body.replaceAll("'\n'", "")}</simple>
+            </transform>
+
+
+
+            <multicast>
+                <to uri="file:camel/output/?fileName=text.txt"/>
+            </multicast>
+
+
 
             <log message="FFPROBE========= ${body}"/>
 
-            <recipientList>
+            <!--<recipientList>
                 <simple>exec:bc?args=${body}/2</simple>
-            </recipientList>
+            </recipientList>-->
 
             <log message="BC=============== ${body}"/>
 
@@ -222,11 +238,12 @@
                         ${headers.CamelExecExitValue} == 0
                     </simple>
 
+
                     <setHeader headerName="videoLength">
                         <simple>${bodyAs(String)}</simple>
                     </setHeader>
 
-                    <log message="${id} Derivatives: Adding Video length ${header.videoLength} to header."
+                    <log message="${id} Derivatives: Adding Video length ${headers.videoLength} to header."
                          loggingLevel="INFO"
                          logName="edu.si.derivatives"/>
                 </when>
@@ -246,7 +263,7 @@
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
 
-            <log message="================================== VIDEO LENGTH ${header.videoLength} ============================================"
+            <log message="================================== VIDEO LENGTH ${headers.videoLength} ============================================"
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
 
