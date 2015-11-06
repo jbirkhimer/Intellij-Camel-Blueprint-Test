@@ -12,25 +12,66 @@ import java.util.Arrays;
  */
 public class VideoThumbnailAggregationStrategy implements AggregationStrategy {
 
+    private Exchange original;
+
     private static final Logger LOG = LoggerFactory.getLogger(VideoThumbnailAggregationStrategy.class);
+
+    public VideoThumbnailAggregationStrategy() {
+        this(null);
+    }
+
+    public VideoThumbnailAggregationStrategy(Exchange original) {
+        this.original = original;
+    }
 
     @Override
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
+
+        /*String strOldExchange = (oldExchange == null) ? null : oldExchange.getIn().getHeaders().toString();
+        String strOldExchangeVal = (oldExchange == null) ? null : oldExchange.getIn().getHeader("videoThumbnailTimePosition").toString();
+
+        LOG.debug("\n\nVideoThumbnailAggregationStrategy :: \n\noldExchange headers == {} \n\nnewExchange Headers == {} \n\noldExchange videoThumbnailTimePosition header == {} \n\n", strOldExchange, newExchange.getIn().getHeaders().toString(), strOldExchangeVal);
+
         if (oldExchange == null) {
+
+            LOG.debug("\n\nVideoThumbnailAggregationStrategy :: \n\nRETURNING == {} \n\n", newExchange.toString());
+
             return newExchange;
+
         } else {
 
-            //oldExchange.getIn().setBody(merged);
+            newExchange.getIn().setBody(oldExchange.getIn().getBody());
 
-            oldExchange.getIn().getHeaders();
+            //newExchange.getIn().setHeaders(oldExchange.getIn().getHeaders());
+            //newExchange.getIn().getHeaders().put("videoThumbnailTimePosition", oldExchange.getIn().getHeader("videoThumbnailTimePosition"));
+            //newExchange.getIn().getHeaders().putAll(oldExchange.getIn().getHeaders());
 
-            LOG.info(">>>>>>>>>>>>>>> OLD HEADERS: {} <<<<<<<<<<<<<<<<<<<<<<", oldExchange.getIn().getHeaders());
+            LOG.debug("VideoThumbnailAggregationStrategy :: \n\nRETURNING == {} \n\n", newExchange.toString());
 
-            newExchange.getIn().getHeaders();
-            LOG.info(">>>>>>>>>>>>>>> NEW HEADERS: {} <<<<<<<<<<<<<<<<<<<<<<", newExchange.getIn().getHeaders());
-            //.getOut().setHeaders(exchange.getIn().getHeaders());
-            newExchange.getIn().setHeaders(oldExchange.getIn().getHeaders());
-            return newExchange;
+            return newExchange.get;
+        }*/
+
+        Exception exception = checkException(oldExchange, newExchange);
+        if (exception != null) {
+            if (original != null) {
+                original.setException(exception);
+                original.getIn().getHeaders().put("videoThumbnailTimePosition", oldExchange.getIn().getHeader("videoThumbnailTimePosition"));
+            } else {
+                oldExchange.setException(exception);
+                oldExchange.getIn().getHeaders().put("videoThumbnailTimePosition", original.getIn().getHeader("videoThumbnailTimePosition"));
+            }
+        }
+
+        return original != null ? original : oldExchange;
+    }
+
+    protected Exception checkException(Exchange oldExchange, Exchange newExchange) {
+        if (oldExchange == null) {
+            return newExchange.getException();
+        } else {
+            return (newExchange != null && newExchange.getException() != null)
+                    ? newExchange.getException()
+                    : oldExchange.getException();
         }
     }
 }

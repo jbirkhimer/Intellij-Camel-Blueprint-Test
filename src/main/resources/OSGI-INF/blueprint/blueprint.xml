@@ -54,15 +54,13 @@
                 </simple>
             </setHeader>
 
-            <setHeader headerName="fileEXT">
+            <!--<setHeader headerName="fileEXT">
                 <simple>video/${file:ext}</simple>
             </setHeader>
 
-            <log message="${id} File ext: ${header.fileEXT}"/>
+            <log message="${id} File ext: ${header.fileEXT}"/>-->
 
             <to uri="direct:processDerivativesVideo"/>
-
-            <!--<to uri="file:camel/done" />-->
         </route>
 
         <route id="DerivativesProcessVideo">
@@ -109,12 +107,12 @@
 
                     <!-- Just copy it and create thumbnail. -->
                     <multicast stopOnException="true" strategyRef="videoThumbnailAggregationStrategy">
-                        <!--<to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>-->
-                        <to uri="direct:processDerivativesVideoLength"/>
-                        <to uri="file:camel/output/mp4?fileName=${header.CamelFedoraPid}.mp4"/>   <!-- testing -->
+                        <to uri="direct:processDerivativesVideoThumbnailTimePosition"/>
                     </multicast>
 
                     <to uri="direct:processDerivativesVideoThumbnail"/>
+                    <to uri="file:camel/output/mp4?fileName=${header.CamelFedoraPid}.mp4"/>   <!-- testing -->
+                    <!--<to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>-->
 
                     <log message="${id} Derivatives: No processing required copying mp4 directly to MP4."
                          loggingLevel="INFO"
@@ -133,7 +131,7 @@
                     &lt;!&ndash; Create a video derivative and thumbnail using ffmpeg. &ndash;&gt;
                     <multicast stopOnException="true">
                         <to uri="direct:processDerivativesVideoFFMPEG"/>
-                        <to uri="direct:processDerivativesVideoLength"/>
+                        <to uri="direct:processDerivativesVideoThumbnailTimePosition"/>
                         <to uri="direct:processDerivativesVideoThumbnail"/>
                     </multicast>
                 </when>-->
@@ -194,67 +192,62 @@
                  logName="edu.si.derivatives"/>
         </route>
 
-        <route id="DerivativesProcessVideoLength">
-            <from uri="direct:processDerivativesVideoLength"/>
-            <log message="${id} Derivatives: Started Video Length processing ..."
+        <route id="DerivativesProcessVideoThumbnailTimePosition">
+            <from uri="direct:processDerivativesVideoThumbnailTimePosition"/>
+            <log message="${id} Derivatives: Started Video thumbnail time position processing ..."
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
 
-            <recipientList>
-                    <simple>exec:ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of compact=print_section=0:nokey=1 -</simple>
-            </recipientList>
-            <!--<to uri="exec:ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of compact=print_section=0:nokey=1 - "/>-->
+            <to uri="exec:ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of compact=print_section=0:nokey=1 -&amp;useStderrOnEmptyStdout=true&amp;exchangePattern=InOut"/>
 
-            <convertBodyTo type="String" charset="UTF-8"/>
-
+            <convertBodyTo type="java.lang.String" charset="utf-8"/>
             <transform>
-                <simple>${body.replaceAll("'\n'", "")}</simple>
+                <simple>${body.replace("'\n'", " / 2\n")}</simple>
             </transform>
+            <!--<log message="FFPROBE========= ${body}"/>-->
 
-
-
-            <!--<multicast>
-                <to uri="file:camel/output/?fileName=text.txt"/>
-            </multicast>-->
-
-
-
-            <log message="FFPROBE========= ${body}"/>
-
-            <recipientList>
-                <simple>exec:eval?args="echo ${body}/2 | bc"</simple>
-            </recipientList>
-
-            <convertBodyTo type="String" charset="UTF-8"/>
-
-            <log message="BC=============== ${body}"/>
-
-
-            <!-- Make an TN derivative. -->
-            <!-- Create a video thumbnail using ffprobe and ffmpeg. -->
-
+            <!-- If ffprobe processing succeeded? -->
+            <!-- Then find the middle of the video using bc and Store video time position for thumbnail in header. -->
             <choice>
-                <!-- If ffprobe processing succeeded? Store video length in header. -->
                 <when>
                     <simple>
                         ${headers.CamelExecExitValue} == 0
                     </simple>
 
+                    <to uri="exec:bc?args="/>
+                    <convertBodyTo type="java.lang.String" charset="UTF-8"/>
+                    <transform>
+                        <simple>${body.replace("'\n'", "")}</simple>
+                    </transform>
+                    <!--<log message="BC=============== ${body}"/>-->
 
-                    <setHeader headerName="videoLength">
-                        <simple>${bodyAs(String)}</simple>
-                    </setHeader>
+                    <!-- If ffprobe and bc processing succeeded? -->
+                    <!-- Store video time position for thumbnail in header. -->
+                    <choice>
+                        <when>
+                            <simple>
+                                ${headers.CamelExecExitValue} == 0
+                            </simple>
 
-                    <log message="${id} Derivatives: Adding Video length ${headers.videoLength} to header."
-                         loggingLevel="INFO"
-                         logName="edu.si.derivatives"/>
+                            <setHeader headerName="videoThumbnailTimePosition">
+                                <simple>${body}</simple>
+                            </setHeader>
+                            <log message="${id} Derivatives: Adding video time position for thumbnail ${header.videoThumbnailTimePosition} to header."
+                                 loggingLevel="INFO"
+                                 logName="edu.si.derivatives"/>
+                        </when>
+                        <otherwise>
+                            <log message="${id} Derivatives: Video thumbnail time position bc processing failed. PID: ${headers.CamelFedoraPid}  Error Code: ${headers.CamelExecExitValue}"
+                                 loggingLevel="ERROR"/>
+                        </otherwise>
+                    </choice>
                 </when>
                 <otherwise>
-                    <log message="${id} Derivatives: Video Length processing failed. PID: ${headers.CamelFedoraPid}  Error Code: ${headers.CamelExecExitValue}"
+                    <log message="${id} Derivatives: Video thumbnail time position ffprobe processing failed. PID: ${headers.CamelFedoraPid}  Error Code: ${headers.CamelExecExitValue}"
                          loggingLevel="ERROR"/>
                 </otherwise>
             </choice>
-            <log message="${id} Finished Derivatives Video length processing."
+            <log message="${id} Finished Derivatives Video thumbnail time position processing."
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
         </route>
@@ -265,7 +258,7 @@
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
 
-            <log message="================================== VIDEO LENGTH ${header.videoLength} ============================================"
+            <log message="================================== VIDEO LENGTH ${header.videoThumbnailTimePosition} ============================================"
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
 
@@ -273,7 +266,7 @@
             <!-- Create a video thumbnail using ffmpeg. -->
             <recipientList>
                 <simple>
-                    exec:ffmpeg?args=-itsoffset -2 -ss ${headers.videoLength} -i - -vcodec mjpeg -vframes 1 -an -f rawvideo -
+                    exec:ffmpeg?args=-itsoffset -2 -ss ${header.videoThumbnailTimePosition} -i - -vcodec mjpeg -vframes 1 -an -f rawvideo -
                 </simple>
             </recipientList>
             <choice>
