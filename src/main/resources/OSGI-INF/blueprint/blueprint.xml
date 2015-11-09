@@ -36,14 +36,12 @@
             <!--<from uri="file:camel/input?noop=true"/>-->
             <!--<from uri="stream:file?fileName=camel/input/test.mp4&amp;autoCloseCount=1"/>-->
 
-            <from uri="timer:fire?period=30000"/>
-
-            <log message="Starting ???"/>
+            <from uri="timer:fire?repeatCount=1"/>
 
             <setHeader headerName="CamelFedoraPid">
                 <simple>
-                    <!--si:389320-->
-                    si:388897
+                    si:389320
+                    <!--si:388897-->
                 </simple>
             </setHeader>
 
@@ -106,13 +104,13 @@
                     </simple>
 
                     <!-- Just copy it and create thumbnail. -->
-                    <multicast stopOnException="true" strategyRef="videoThumbnailAggregationStrategy">
+                    <multicast strategyRef="videoThumbnailAggregationStrategy">
+                        <to uri="file:camel/output/mp4?fileName=${header.CamelFedoraPid}.mp4"/>   <!-- testing -->
+                        <!--<to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>-->
                         <to uri="direct:processDerivativesVideoThumbnailTimePosition"/>
                     </multicast>
 
                     <to uri="direct:processDerivativesVideoThumbnail"/>
-                    <to uri="file:camel/output/mp4?fileName=${header.CamelFedoraPid}.mp4"/>   <!-- testing -->
-                    <!--<to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>-->
 
                     <log message="${id} Derivatives: No processing required copying mp4 directly to MP4."
                          loggingLevel="INFO"
@@ -229,10 +227,13 @@
                                 ${headers.CamelExecExitValue} == 0
                             </simple>
 
-                            <setHeader headerName="videoThumbnailTimePosition">
+                            <!--<setHeader headerName="videoThumbnailTimePosition">
                                 <simple>${body}</simple>
-                            </setHeader>
-                            <log message="${id} Derivatives: Adding video time position for thumbnail ${header.videoThumbnailTimePosition} to header."
+                            </setHeader>-->
+                            <setProperty propertyName="videoThumbnailTimePosition">
+                                <simple>${body}</simple>
+                            </setProperty>
+                            <log message="${id} Derivatives: Adding video time position for thumbnail ${property.videoThumbnailTimePosition} to header."
                                  loggingLevel="INFO"
                                  logName="edu.si.derivatives"/>
                         </when>
@@ -258,7 +259,7 @@
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
 
-            <log message="================================== VIDEO LENGTH ${header.videoThumbnailTimePosition} ============================================"
+            <log message="================================== VIDEO LENGTH ${property.videoThumbnailTimePosition} ============================================"
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
 
@@ -266,11 +267,11 @@
             <!-- Create a video thumbnail using ffmpeg. -->
             <recipientList>
                 <simple>
-                    exec:ffmpeg?args=-itsoffset -2 -ss ${header.videoThumbnailTimePosition} -i - -vcodec mjpeg -vframes 1 -an -f rawvideo -
+                    exec:ffmpeg?args=-itsoffset -2 -ss ${property.videoThumbnailTimePosition} -i - -vcodec mjpeg -vframes 1 -an -f rawvideo - &amp;useStderrOnEmptyStdout=true
                 </simple>
             </recipientList>
             <choice>
-                <!-- If ffmpeg processing succeeded? Store a MP4 datastream on the FDO. -->
+                <!-- If ffmpeg thumbnail processing succeeded? Store a MP4 datastream on the FDO. -->
                 <when>
                     <simple>
                         ${headers.CamelExecExitValue} == 0
@@ -279,16 +280,16 @@
                         <!--<to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>-->
                         <to uri="file:camel/output/?fileName=${file:onlyname.noext}.jpg"/>   <!-- testing -->
                     </multicast>
-                    <log message="${id} Derivatives: Adding video thumbnail to TN."
+                    <log message="${id} Derivatives: Adding Video Thumbnail To TN."
                          loggingLevel="INFO"
                          logName="edu.si.derivatives"/>
                 </when>
                 <otherwise>
-                    <log message="${id} Derivatives: FFMPEG video thumbnail processing failed. PID: ${headers.CamelFedoraPid}  Error Code: ${headers.CamelExecExitValue}"
+                    <log message="${id} Derivatives: Video Thumbnail Processing Using FFMPEG Failed. PID: ${headers.CamelFedoraPid}  Error Code: ${headers.CamelExecExitValue}"
                          loggingLevel="ERROR"/>
                 </otherwise>
             </choice>
-            <log message="${id} Finished Derivatives Video FFMPEG thumbnail processing."
+            <log message="${id} Finished Video Thumbnail processing."
                  loggingLevel="INFO"
                  logName="edu.si.derivatives"/>
         </route>
