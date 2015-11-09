@@ -266,9 +266,14 @@
             <!-- Make an TN datastream. -->
             <!-- Create a video thumbnail using ffmpeg. -->
             <recipientList>
-                <simple>
+                <!--<simple>
                     exec:ffmpeg?args=-itsoffset -2 -ss ${property.videoThumbnailTimePosition} -i - -vcodec mjpeg -vframes 1 -an -f rawvideo - &amp;useStderrOnEmptyStdout=true
+                </simple>-->
+                <simple>
+                    exec:ffmpeg?args=-itsoffset -2 -ss ${property.videoThumbnailTimePosition} -i pipe:0 -vcodec mjpeg -vframes 1 -an -f rawvideo -&amp;useStderrOnEmptyStdout=true
                 </simple>
+
+                <!-- this command picks the best image for a thumbnail "ffmpeg ffmpeg -i - -vf thumbnail -frames:v 1 -" -->
             </recipientList>
             <choice>
                 <!-- If ffmpeg thumbnail processing succeeded? Store a MP4 datastream on the FDO. -->
