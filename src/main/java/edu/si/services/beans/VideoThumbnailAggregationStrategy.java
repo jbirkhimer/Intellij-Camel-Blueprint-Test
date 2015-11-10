@@ -12,11 +12,7 @@ import java.util.Arrays;
  */
 public class VideoThumbnailAggregationStrategy implements AggregationStrategy {
 
-
-
     private static final Logger LOG = LoggerFactory.getLogger(VideoThumbnailAggregationStrategy.class);
-
-
 
     @Override
     public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {

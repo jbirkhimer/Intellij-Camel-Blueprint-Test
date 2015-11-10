@@ -2,12 +2,12 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Osmorc" name="OSGi">
-      <configuration osmorcControlsManifest="true" manifestLocation="" jarfileLocation="$MODULE_DIR$/target//home/jbirkhimer/IdeaProjects/Intellij-Camel-Blueprint-Test/target/camel-test-route-1.0-SNAPSHOT.jar" outputPathType="CompilerOutputPath" useBndFile="false" bndFileLocation="" useBundlorFile="false" bundlorFileLocation="" bundleActivator="" bundleSymbolicName="camel-test-rout" bundleVersion="1.0.0.SNAPSHOT" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false">
+      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="camel-test-route-1.0-SNAPSHOT.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="" bundleSymbolicName="camel-test-rout" bundleVersion="1.0.0.SNAPSHOT" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Private-Package" value="edu.si.services.*" />
           <property key="Import-Package" value="*" />
           <property key="Bundle-Name" value="Camel Blueprint Route" />
-          <property key="Include-Resource" value="OSGI-INF/blueprint/blueprint.xml=/home/jbirkhimer/IdeaProjects/Intellij-Camel-Blueprint-Test/src/main/resources/OSGI-INF/blueprint/blueprint.xml,log4j.properties=/home/jbirkhimer/IdeaProjects/Intellij-Camel-Blueprint-Test/src/main/resources/log4j.properties" />
+          <property key="Include-Resource" value="OSGI-INF/blueprint/blueprint.xml=$MODULE_DIR$/src/main/resources/OSGI-INF/blueprint/blueprint.xml,log4j.properties=$MODULE_DIR$/src/main/resources/log4j.properties" />
         </additionalProperties>
         <additionalJARContents />
       </configuration>
