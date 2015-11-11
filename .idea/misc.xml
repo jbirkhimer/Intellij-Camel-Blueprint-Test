@@ -11,6 +11,7 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$USER_HOME$/git/sidora-services/Components/FedoraRepo/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">

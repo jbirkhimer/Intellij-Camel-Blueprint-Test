@@ -5,9 +5,6 @@
        http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
        http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
 
-    <!-- The VideoThumbnailAggregationStrategy -->
-    <bean id="videoThumbnailAggregationStrategy" class="edu.si.services.beans.VideoThumbnailAggregationStrategy"/>
-
     <camelContext id="VideoDerivativeCamelTesting"
                   xmlns="http://camel.apache.org/schema/blueprint"
                   xmlns:atom="http://www.w3.org/2005/Atom"
