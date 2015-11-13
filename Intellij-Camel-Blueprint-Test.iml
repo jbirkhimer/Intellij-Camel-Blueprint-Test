@@ -41,7 +41,7 @@
     <orderEntry type="library" name="Maven: org.apache.camel:camel-core-osgi:2.14.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.camel:camel-stream:2.14.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.camel:camel-script:2.14.3" level="project" />
-    <orderEntry type="library" name="Maven: edu.si.services.camel:FedoraRepo:1.0" level="project" />
+    <orderEntry type="module" module-name="FedoraRepo" />
     <orderEntry type="library" name="Maven: com.yourmediashelf.fedora.client:fedora-client-core:0.7" level="project" />
     <orderEntry type="library" name="Maven: com.sun.jersey:jersey-client:1.17.1" level="project" />
     <orderEntry type="library" name="Maven: com.sun.jersey:jersey-core:1.17.1" level="project" />

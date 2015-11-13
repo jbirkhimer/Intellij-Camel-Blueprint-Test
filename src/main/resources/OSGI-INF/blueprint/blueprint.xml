@@ -55,7 +55,11 @@
 
             <setHeader headerName="CamelFedoraPid">
                 <simple>
-                    si:3213 <!-- avi -->
+                    <!--si:3213--> <!--avi-->
+                    <!--si:3045--> <!-- mp4 -->
+                    <!--si:3120--> <!-- mp4 -->
+
+
                     <!--si:389320--> <!-- mp4 -->
                     <!--si:388897--> <!-- mp4 -->
                     <!--si:389285--> <!-- avi -->
@@ -109,6 +113,12 @@
                  loggingLevel="DEBUG"
                  logName="edu.si.derivatives"/>
 
+            <setBody>
+                <simple>
+                    ${headers.CamelFileNameProduced}
+                </simple>
+            </setBody>
+
             <choice>
                 <!-- If the OBJ datastream contains a supported video format : OGG, MP4, MOV, QT, M4V, AVI, MKV -->
                 <when>
@@ -116,6 +126,8 @@
                     <simple>
                         ${header.dsMIME} == 'video/mp4'
                     </simple>
+
+                    <to uri="reader:file"/>
 
                     <!-- Just copy it and create thumbnail. -->
                     <to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>
@@ -170,6 +182,51 @@
                     </choice>
 
                 </when>
+
+                <when>
+
+                    <!--
+                    ogg - audio/ogg
+                    m4a - audio/mp4
+
+                    mp4, m4v - video/mp4
+
+                    mov, qt - video/quicktime
+                    avi - video/avi
+                    mkv - video/x-matroska
+                    -->
+
+                    <simple>
+                        ${header.dsMIME} == 'audio/ogg' ||
+                        ${header.dsMIME} == 'audio/m4a'
+                    </simple>
+
+                    <!-- Make an MP4 derivative and TN. -->
+                    <!-- Create a video derivative and thumbnail using ffmpeg. -->
+                    <to uri="direct:processDerivativesVideoFFMPEG"/>
+                    <to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>
+                    <to uri="direct:processDerivativesVideoThumbnailTimePosition"/>
+                    <to uri="direct:processDerivativesVideoThumbnail"/>
+
+                    <!--For Testing Dont Delete the Temp File -->
+                    <recipientList> <!-- Delete the temporary file. Note: This approach is Unix specific. -->
+                        <simple>
+                            exec:rm?args=-f ${header.CamelFileNameProduced}.mp4
+                        </simple>
+                    </recipientList>
+                    <choice>
+                        <when>
+                            <simple>
+                                ${headers.CamelExecExitValue} != 0
+                            </simple>
+                            <log message="${id} Derivatives: Unable to delete video working file. Filename: ${headers.CamelFileNameProduced}.mp4"
+                                 loggingLevel="WARN"/>
+                            <!-- We also want to proactively tell monitoring -->
+                        </when>
+                    </choice>
+
+                </when>
+
                 <otherwise>
                     <log message="${id} An unsupported video file type was found: ${header.dsMIME}."
                          loggingLevel="WARN"/>
@@ -177,7 +234,7 @@
             </choice>
 
             <!-- Delete the temporary video file. Note: This approach is Unix specific. -->
-            <!--<recipientList>
+            <recipientList>
                 <simple>
                     exec:rm?args=-f ${header.CamelFileNameProduced}
                 </simple>
@@ -189,9 +246,9 @@
                     </simple>
                     <log message="${id} Derivatives: Unable to delete video working file. Filename: ${headers.CamelFileNameProduced}"
                          loggingLevel="WARN"/>
-                    &lt;!&ndash; We also want to proactively tell monitoring &ndash;&gt;
+                    <!-- We also want to proactively tell monitoring -->
                 </when>
-            </choice>-->
+            </choice>
 
             <log message="${id} Finished Derivatives Video processing."
                  loggingLevel="DEBUG"
@@ -250,11 +307,11 @@
 
             <recipientList>
                 <simple>
-                    exec:/usr/local/bin/ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of compact=print_section=0:nokey=1 -&amp;useStderrOnEmptyStdout=true
+                    exec:/usr/local/bin/ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of compact=print_section=0:nokey=1 ${header.CamelFileNameProduced}&amp;useStderrOnEmptyStdout=true
                 </simple>
             </recipientList>
 
-            <!--<to uri="exec:/usr/local/bin/ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of compact=print_section=0:nokey=1 ${header.CamelFileNameProduced}&amp;useStderrOnEmptyStdout=true&amp;exchangePattern=InOut"/>-->
+            <!--<to uri="exec:/usr/local/bin/ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of compact=print_section=0:nokey=1 ${header.CamelFileNameProduced}.mp4&amp;useStderrOnEmptyStdout=true&amp;exchangePattern=InOut"/>-->
 
             <convertBodyTo type="java.lang.String" charset="utf-8"/>
             <transform>
