@@ -53,12 +53,12 @@
             <setHeader headerName="CamelFedoraPid">
                 <simple>
 
-                    si:3184 <!-- m4a -->
-                    <!--si:3210-->
+                    <!--si:3184--> <!-- m4a -->
+                    <!--si:3210--> <!-- mov has problems with thumbnail just black image -->
 
                     <!--si:3213--> <!--avi-->
                     <!--si:3045--> <!-- mp4 -->
-                    <!--si:3120--> <!-- mp4 -->
+                    si:3120 <!-- mp4 -->
 
 
                     <!--si:389320--> <!-- mp4 -->
@@ -366,7 +366,8 @@
             <!-- Create a video thumbnail using ffmpeg. -->
             <recipientList>
                 <simple>
-                    exec:/usr/local/bin/ffmpeg?args=-ss ${header.videoThumbnailTimePosition} -i ${header.CamelFileNameProduced} -vf thumbnail -frames:v 1 ${header.CamelFileNameProduced}-TN.jpg&amp;useStderrOnEmptyStdout=true
+                    <!--exec:/usr/local/bin/ffmpeg?args=-ss ${header.videoThumbnailTimePosition} -i ${header.CamelFileNameProduced} -vf thumbnail -frames:v 1 ${header.CamelFileNameProduced}-TN.jpg&amp;useStderrOnEmptyStdout=true-->
+                    exec:/usr/local/bin/ffmpeg?args=-ss ${header.videoThumbnailTimePosition} -i ${header.CamelFileNameProduced} -vcodec mjpeg -vframes 1 -an -f rawvideo ${header.CamelFileNameProduced}-TN.jpg
                 </simple>
                 <!--exec:/usr/local/bin/ffmpeg?args=-ss ${header.videoThumbnailTimePosition} -i ${header.CamelFileNameProduced} -vcodec mjpeg -vframes 1 -an -f rawvideo ${header.CamelFileNameProduced}-TN.jpg&amp;useStderrOnEmptyStdout=true-->
                 <!-- alt command that picks the best image for a thumbnail "ffmpeg ffmpeg -i - -vf thumbnail -frames:v 1 -" -->
