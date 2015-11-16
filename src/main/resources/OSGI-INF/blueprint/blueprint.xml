@@ -79,6 +79,8 @@
             <to uri="mock:result"/>
         </route>
 
+        <!--========================== STARTING VIDEO ROUTES ===============================-->
+
         <route id="DerivativesProcessVideo">
             <from uri="direct:processDerivativesVideo"/>
             <log message="${id} Derivatives: Started Video processing ..."
@@ -141,17 +143,6 @@
                 </when>
                 <when>
 
-                    <!--
-                    ogg - audio/ogg
-                    m4a - audio/mp4
-
-                    mp4, m4v - video/mp4
-
-                    mov, qt - video/quicktime
-                    avi - video/avi
-                    mkv - video/x-matroska
-                    -->
-
                     <simple>
                         ${header.dsMIME} == 'video/quicktime' ||
                         ${header.dsMIME} == 'video/avi' ||
@@ -186,17 +177,6 @@
 
                 <when>
 
-                    <!--
-                    ogg - audio/ogg
-                    m4a - audio/mp4
-
-                    mp4, m4v - video/mp4
-
-                    mov, qt - video/quicktime
-                    avi - video/avi
-                    mkv - video/x-matroska
-                    -->
-
                     <simple>
                         ${header.dsMIME} == 'audio/mp4' ||
                         ${header.dsMIME} == 'audio/ogg' ||
@@ -204,13 +184,11 @@
                     </simple>
 
                     <!-- Make an MP4 derivative and TN. -->
-                    <!-- Create a audio derivative using ffmpeg. -->
+                    <!-- Create a audio derivative using ffmpeg and MP4. -->
                     <to uri="direct:processDerivativesVideoFFMPEG"/>
                     <to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>
-                    <!--<to uri="direct:processDerivativesVideoThumbnailTimePosition"/>
-                    <to uri="direct:processDerivativesVideoThumbnail"/>-->
 
-                    <!-- Create a audio derivative thumbnail. -->
+                    <!-- Create a audio thumbnail TN. -->
                     <setBody>
                         <simple>
                             Input/video-thumbnails/audio-video.png
@@ -327,8 +305,6 @@
                 </simple>
             </recipientList>
 
-            <!--<to uri="exec:/usr/local/bin/ffprobe?args=-v error -select_streams v:0 -show_entries stream=duration -of compact=print_section=0:nokey=1 ${header.CamelFileNameProduced}.mp4&amp;useStderrOnEmptyStdout=true&amp;exchangePattern=InOut"/>-->
-
             <convertBodyTo type="java.lang.String" charset="utf-8"/>
             <transform>
                 <simple>${body.replace("'\n'", " / 2\n")}</simple>  <!-- the newline after the 2 needs to be there for the /usr/bin/bc exec command -->
@@ -417,6 +393,8 @@
                          logName="edu.si.derivatives"/>
                 </when>
                 <otherwise>
+
+                    <!-- creating video thumbnail failed set the thumbnail to the default video thumbnail -->
                     <setBody>
                         <simple>
                             Input/video-thumbnails/video.png
@@ -424,6 +402,7 @@
                     </setBody>
                     <to uri="reader:file"/>
                     <to uri="fedora:addDatastream?name=TN&amp;type=video/jpg&amp;dsLabel=TN&amp;group=M&amp;versionable=false"/>
+
                     <log message="${id} Derivatives: Video Thumbnail Processing Failed. PID: ${headers.CamelFedoraPid}  Error Code: ${headers.CamelExecExitValue}"
                          loggingLevel="ERROR"/>
                 </otherwise>

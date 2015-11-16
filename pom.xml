@@ -138,7 +138,7 @@
           <instructions>
             <Bundle-SymbolicName>camel-test-rout</Bundle-SymbolicName>
             <Private-Package>edu.si.services.*</Private-Package>
-            <Import-Package>*</Import-Package>
+            <Import-Package>*;resolution:=optional</Import-Package>
           </instructions>
         </configuration>
       </plugin>
@@ -150,6 +150,7 @@
         <version>${camel.version}</version>
         <configuration>
           <useBlueprint>true</useBlueprint>
+          <!--<logClasspath>true</logClasspath>-->
         </configuration>
       </plugin>
 

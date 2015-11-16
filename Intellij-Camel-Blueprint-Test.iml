@@ -5,7 +5,7 @@
       <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="camel-test-route-1.0-SNAPSHOT.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="" bundleSymbolicName="camel-test-rout" bundleVersion="1.0.0.SNAPSHOT" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Private-Package" value="edu.si.services.*" />
-          <property key="Import-Package" value="*" />
+          <property key="Import-Package" value="*;resolution:=optional" />
           <property key="Bundle-Name" value="Camel Blueprint Route" />
           <property key="Include-Resource" value="META-INF/services/org/apache/camel/component/reader=$MODULE_DIR$/src/main/resources/META-INF/services/org/apache/camel/component/reader,OSGI-INF/blueprint/blueprint.xml=$MODULE_DIR$/src/main/resources/OSGI-INF/blueprint/blueprint.xml,log4j.properties=$MODULE_DIR$/src/main/resources/log4j.properties" />
         </additionalProperties>
