@@ -5,9 +5,6 @@
        http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
        http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
 
-    <!-- The VideoThumbnailAggregationStrategy -->
-    <bean id="videoThumbnailAggregationStrategy" class="edu.si.services.beans.VideoThumbnailAggregationStrategy"/>
-
     <camelContext id="VideoDerivativeCamelTesting"
                   xmlns="http://camel.apache.org/schema/blueprint"
                   xmlns:atom="http://www.w3.org/2005/Atom"
@@ -55,6 +52,10 @@
 
             <setHeader headerName="CamelFedoraPid">
                 <simple>
+
+                    si:3184 <!-- m4a -->
+                    <!--si:3210-->
+
                     <!--si:3213--> <!--avi-->
                     <!--si:3045--> <!-- mp4 -->
                     <!--si:3120--> <!-- mp4 -->
@@ -197,17 +198,26 @@
                     -->
 
                     <simple>
+                        ${header.dsMIME} == 'audio/mp4' ||
                         ${header.dsMIME} == 'audio/ogg' ||
                         ${header.dsMIME} == 'audio/m4a'
                     </simple>
 
                     <!-- Make an MP4 derivative and TN. -->
-                    <!-- Create a video derivative and thumbnail using ffmpeg. -->
+                    <!-- Create a audio derivative using ffmpeg. -->
                     <to uri="direct:processDerivativesVideoFFMPEG"/>
                     <to uri="fedora:addDatastream?name=MP4&amp;type=video/mp4&amp;dsLabel=MP4&amp;group=M&amp;versionable=false"/>
-                    <to uri="direct:processDerivativesVideoThumbnailTimePosition"/>
-                    <to uri="direct:processDerivativesVideoThumbnail"/>
+                    <!--<to uri="direct:processDerivativesVideoThumbnailTimePosition"/>
+                    <to uri="direct:processDerivativesVideoThumbnail"/>-->
 
+                    <!-- Create a audio derivative thumbnail. -->
+                    <setBody>
+                        <simple>
+                            Input/video-thumbnails/audio-video.png
+                        </simple>
+                    </setBody>
+                    <to uri="reader:file"/>
+                    <to uri="fedora:addDatastream?name=TN&amp;type=video/jpg&amp;dsLabel=TN&amp;group=M&amp;versionable=false"/>
                     <!--For Testing Dont Delete the Temp File -->
                     <recipientList> <!-- Delete the temporary file. Note: This approach is Unix specific. -->
                         <simple>
@@ -226,8 +236,14 @@
                     </choice>
 
                 </when>
-
                 <otherwise>
+                    <setBody>
+                        <simple>
+                            Input/video-thumbnails/video_unknown.png
+                        </simple>
+                    </setBody>
+                    <to uri="reader:file"/>
+                    <to uri="fedora:addDatastream?name=TN&amp;type=video/jpg&amp;dsLabel=TN&amp;group=M&amp;versionable=false"/>
                     <log message="${id} An unsupported video file type was found: ${header.dsMIME}."
                          loggingLevel="WARN"/>
                 </otherwise>
@@ -343,6 +359,7 @@
                             <setHeader headerName="videoThumbnailTimePosition">
                                 <simple>${body}</simple>
                             </setHeader>
+
                             <log message="${id} Derivatives: Adding video time position for thumbnail at ${header.videoThumbnailTimePosition}sec. to header."
                                  loggingLevel="DEBUG"
                                  logName="edu.si.derivatives"/>
@@ -373,10 +390,12 @@
             <!-- Create a video thumbnail using ffmpeg. -->
             <recipientList>
                 <simple>
-                    exec:/usr/local/bin/ffmpeg?args=-itsoffset -2 -ss ${header.videoThumbnailTimePosition} -i ${header.CamelFileNameProduced} -vcodec mjpeg -vframes 1 -an -f rawvideo ${header.CamelFileNameProduced}-TN.jpg&amp;useStderrOnEmptyStdout=true
+                    exec:/usr/local/bin/ffmpeg?args=-ss ${header.videoThumbnailTimePosition} -i ${header.CamelFileNameProduced} -vf thumbnail -frames:v 1 ${header.CamelFileNameProduced}-TN.jpg&amp;useStderrOnEmptyStdout=true
                 </simple>
+                <!--exec:/usr/local/bin/ffmpeg?args=-ss ${header.videoThumbnailTimePosition} -i ${header.CamelFileNameProduced} -vcodec mjpeg -vframes 1 -an -f rawvideo ${header.CamelFileNameProduced}-TN.jpg&amp;useStderrOnEmptyStdout=true-->
                 <!-- alt command that picks the best image for a thumbnail "ffmpeg ffmpeg -i - -vf thumbnail -frames:v 1 -" -->
             </recipientList>
+
             <choice>
                 <!-- If ffmpeg thumbnail processing succeeded? Store an MP4 datastream on the FDO. -->
                 <when>
@@ -398,14 +417,20 @@
                          logName="edu.si.derivatives"/>
                 </when>
                 <otherwise>
-
+                    <setBody>
+                        <simple>
+                            Input/video-thumbnails/video.png
+                        </simple>
+                    </setBody>
+                    <to uri="reader:file"/>
+                    <to uri="fedora:addDatastream?name=TN&amp;type=video/jpg&amp;dsLabel=TN&amp;group=M&amp;versionable=false"/>
                     <log message="${id} Derivatives: Video Thumbnail Processing Failed. PID: ${headers.CamelFedoraPid}  Error Code: ${headers.CamelExecExitValue}"
                          loggingLevel="ERROR"/>
                 </otherwise>
             </choice>
 
             <!-- Delete the temporary video file. Note: This approach is Unix specific. -->
-            <recipientList>
+            <!--<recipientList>
                 <simple>
                     exec:rm?args=-f ${header.CamelFileNameProduced}-TN.jpg
                 </simple>
@@ -417,9 +442,9 @@
                     </simple>
                     <log message="${id} Derivatives: Unable to delete Thumbnail working file. Filename: ${headers.CamelFileNameProduced}-TN.jpg4"
                          loggingLevel="WARN"/>
-                    <!-- We also want to proactively tell monitoring -->
+                    &lt;!&ndash; We also want to proactively tell monitoring &ndash;&gt;
                 </when>
-            </choice>
+            </choice>-->
 
             <log message="${id} Finished Video Thumbnail processing."
                  loggingLevel="DEBUG"
