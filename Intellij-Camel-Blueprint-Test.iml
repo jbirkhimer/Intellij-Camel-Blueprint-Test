@@ -59,11 +59,11 @@
     <orderEntry type="library" name="Maven: xml-apis:xml-apis:1.4.01" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: com.sun.jersey:jersey-bundle:1.17.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: javax.ws.rs:jsr311-api:1.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.camel:camel-test:2.14.3" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-log4j12:1.7.12" level="project" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
     <orderEntry type="library" name="Maven: org.apache.camel:camel-test-blueprint:2.14.3" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.camel:camel-test:2.14.3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.aries.blueprint:org.apache.aries.blueprint:1.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.aries:org.apache.aries.util:1.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.aries.proxy:org.apache.aries.proxy.impl:1.0.1" level="project" />

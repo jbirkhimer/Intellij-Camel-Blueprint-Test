@@ -52,13 +52,16 @@
 
             <setHeader headerName="CamelFedoraPid">
                 <simple>
+                    si:3144
+                    <!--si:3275--> <!-- mkv not creating TN -->
+                    <!--si:3281--> <!-- m4v -->
 
                     <!--si:3184--> <!-- m4a -->
                     <!--si:3210--> <!-- mov has problems with thumbnail just black image -->
 
                     <!--si:3213--> <!--avi-->
                     <!--si:3045--> <!-- mp4 -->
-                    si:3120 <!-- mp4 -->
+                    <!--si:3120--> <!-- mp4 -->
 
 
                     <!--si:389320--> <!-- mp4 -->
